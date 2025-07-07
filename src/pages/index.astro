@@ -3,7 +3,7 @@ import pkg from 'jsdiff';
 const { diffWords } = pkg;
 
 // 1. データの取得と準備
-const allPosts = await Astro.glob('../../content/forecasts/*.md');
+const allPosts = await Astro.glob('src/content/forecasts/*.md');
 const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
 
 const latest = sortedPosts[0]?.frontmatter;
