@@ -1,5 +1,6 @@
 ---
-import { diffWords } from 'jsdiff';
+import pkg from 'jsdiff';
+const { diffWords } = pkg;
 
 // 1. データの取得と準備
 const allPosts = await Astro.glob('../../content/forecasts/*.md');
