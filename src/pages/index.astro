@@ -1,0 +1,90 @@
+---
+import { diffWords } from 'jsdiff';
+
+// 1. データの取得と準備
+const allPosts = await Astro.glob('../../content/forecasts/*.md');
+const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+
+const latest = sortedPosts[0]?.frontmatter;
+const previous = sortedPosts[1]?.frontmatter;
+
+const models = ['gpt-4o', 'gemini', 'claude'];
+
+// 2. 差分計算とHTML生成のヘルパー関数
+function createDiffHtml(latestText, previousText) {
+  if (!previousText) {
+    return latestText;
+  }
+  const diff = diffWords(previousText, latestText);
+  return diff.map(part => {
+    if (part.added) {
+      return `<span class="added">${part.value}</span>`;
+    }
+    if (part.removed) {
+      return `<del>${part.value}</del>`;
+    }
+    return part.value;
+  }).join('');
+}
+
+const predictionsWithDiff = models.map(model => {
+    const latestPrediction = latest?.predictions[model] || 'N/A';
+    const previousPrediction = previous?.predictions[model];
+    return {
+        model,
+        diffHtml: createDiffHtml(latestPrediction, previousPrediction)
+    };
+});
+---
+
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIによるAGI実現予測の定点観測</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 2em;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2 {
+            color: #222;
+        }
+        .prediction-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 1.5em;
+            margin-bottom: 2em;
+            border-radius: 8px;
+        }
+        .added {
+            background-color: #e6ffed;
+            text-decoration: none;
+        }
+        del {
+            background-color: #ffebe9;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AIによるAGI実現予測の定点観測</h1>
+        {latest && <p>最新の予測 ({latest.date})</p>}
+    </header>
+
+    <main>
+        {predictionsWithDiff.map(prediction => (
+            <div class="prediction-container">
+                <h2>{prediction.model.toUpperCase()}</h2>
+                <p set:html={prediction.diffHtml} />
+            </div>
+        ))}
+    </main>
+</body>
+</html>
