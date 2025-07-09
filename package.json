@@ -10,8 +10,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/vercel": "^8.2.1",
+    "@astrojs/vercel": "^8.0.4",
     "astro": "^5.11.0",
-    "jsdiff": "^1.1.1"
+    "jsdiff": "^1.1.1",
+    "kleur": "^4.0.0"
   }
 }

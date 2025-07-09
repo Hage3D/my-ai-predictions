@@ -1,0 +1,42 @@
+{
+  "$ref": "#/definitions/forecasts",
+  "definitions": {
+    "forecasts": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "predictions": {
+          "type": "object",
+          "properties": {
+            "gpt-4o": {
+              "type": "string"
+            },
+            "gemini": {
+              "type": "string"
+            },
+            "claude": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "gpt-4o",
+            "gemini",
+            "claude"
+          ],
+          "additionalProperties": false
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "predictions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,22 +1,31 @@
 ---
-import pkg from 'jsdiff';
-const { diffWords } = pkg;
+import { diffWords } from 'jsdiff';
 
-// 1. データの取得と準備
+// --- 1. データの取得と準備 ---
 const allPosts = await Astro.glob('../content/forecasts/*.md');
-const sortedPosts = allPosts.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+const sortedPosts = allPosts.sort((a, b) => {
+    const dateA = a.frontmatter.date ? new Date(a.frontmatter.date).getTime() : 0;
+    const dateB = b.frontmatter.date ? new Date(b.frontmatter.date).getTime() : 0;
+    return dateB - dateA;
+});
 
-const latest = sortedPosts[0]?.frontmatter;
-const previous = sortedPosts[1]?.frontmatter;
+const latestPost = sortedPosts.length > 0 ? sortedPosts[0] : null;
+const previousPost = sortedPosts.length > 1 ? sortedPosts[1] : null;
 
 const models = ['gpt-4o', 'gemini', 'claude'];
 
-// 2. 差分計算とHTML生成のヘルパー関数
+// --- 2. 差分計算とHTML生成のヘルパー関数 ---
 function createDiffHtml(latestText, previousText) {
-  if (!previousText) {
+  // 最新のテキストがなければ表示しない
+  if (latestText === null || latestText === undefined) {
+    return '<span>N/A</span>';
+  }
+  // 比較対象の過去のテキストがなければ、最新のテキストをそのまま表示
+  if (previousText === null || previousText === undefined) {
     return latestText;
   }
-  const diff = diffWords(previousText, latestText);
+
+  const diff = diffWords(String(previousText), String(latestText));
   return diff.map(part => {
     if (part.added) {
       return `<span class="added">${part.value}</span>`;
@@ -28,14 +37,17 @@ function createDiffHtml(latestText, previousText) {
   }).join('');
 }
 
+// --- 3. モデルごとの予測と差分を準備 ---
 const predictionsWithDiff = models.map(model => {
-    const latestPrediction = latest?.predictions[model] || 'N/A';
-    const previousPrediction = previous?.predictions[model];
+    const latestPrediction = latestPost?.frontmatter?.predictions?.[model];
+    const previousPrediction = previousPost?.frontmatter?.predictions?.[model];
     return {
         model,
         diffHtml: createDiffHtml(latestPrediction, previousPrediction)
     };
 });
+
+const latestDate = latestPost?.frontmatter?.date;
 ---
 
 <html lang="ja">
@@ -71,12 +83,19 @@ const predictionsWithDiff = models.map(model => {
             background-color: #ffebe9;
             text-decoration: line-through;
         }
+        span.added, del {
+            padding: 0.2em 0;
+        }
     </style>
 </head>
 <body>
     <header>
         <h1>AIによるAGI実現予測の定点観測</h1>
-        {latest && <p>最新の予測 ({latest.date})</p>}
+        {latestDate ? (
+            <p>最新の予測 ({latestDate})</p>
+        ) : (
+            <p>予測データがありません。</p>
+        )}
     </header>
 
     <main>
